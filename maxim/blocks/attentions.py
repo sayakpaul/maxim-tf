@@ -24,11 +24,11 @@ def CALayer(
         y = layers.GlobalAvgPool2D(keepdims=True)(x)
         # Squeeze (in Squeeze-Excitation)
         y = Conv1x1(
-            filters=num_channels // reduction, use_bias=use_bias, name=f"{name}_squeeze"
+            filters=num_channels // reduction, use_bias=use_bias, name=f"{name}_Conv_0"
         )(y)
         y = tf.nn.relu(y)
         # Excitation (in Squeeze-Excitation)
-        y = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_excite")(y)
+        y = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_1")(y)
         y = tf.nn.sigmoid(y)
         return x * y
 

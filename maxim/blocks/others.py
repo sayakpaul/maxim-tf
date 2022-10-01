@@ -17,10 +17,10 @@ def MlpBlock(
 
     def apply(x):
         d = K.int_shape(x)[-1]
-        x = layers.Dense(mlp_dim, use_bias=use_bias, name=f"{name}_dense1")(x)
+        x = layers.Dense(mlp_dim, use_bias=use_bias, name=f"{name}_Dense_0")(x)
         x = tf.nn.gelu(x)
         x = layers.Dropout(dropout_rate)(x)
-        x = layers.Dense(d, use_bias=use_bias, name=f"{name}_dense2")(x)
+        x = layers.Dense(d, use_bias=use_bias, name=f"{name}_Dense_1")(x)
         return x
 
     return apply
@@ -43,7 +43,7 @@ def UpSampleRatio(
             height=tf.cast(h * ratio, tf.int32), width=tf.cast(w * ratio, tf.int32)
         )(x)
 
-        x = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_point_conv")(x)
+        x = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)
         return x
 
     return apply
