@@ -95,7 +95,7 @@ def MAXIM(
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
             resizing_layer = layers.Resizing(
-                height=h // (2 ** i), width=w // (2 ** i), method="nearest"
+                height=h // (2 ** i), width=w // (2 ** i), interpolation="nearest"
             )
             shortcuts.append(resizing_layer(x))
 

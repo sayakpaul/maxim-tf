@@ -20,12 +20,15 @@ def Model(variant=None, input_resolution=256, **kw) -> keras.Model:
     if variant is not None:
         config = MAXIM_CONFIGS[variant]
         for k, v in config.items():
-            if k != "name":
-                kw.setdefault(k, v)
+            kw.setdefault(k, v)
+
+    if "variant" in kw:
+        _ = kw.pop("variant")
+    model_name = kw.pop("name")
 
     inputs = keras.Input((input_resolution, input_resolution, 3))
     maxim_model = maxim.MAXIM(**kw)
     outputs = maxim_model(inputs)
-    final_model = keras.Model(inputs, outputs, name=f'{config["name"]}_model')
+    final_model = keras.Model(inputs, outputs, name=f"{model_name}_model")
 
     return final_model

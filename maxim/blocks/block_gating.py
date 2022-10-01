@@ -16,7 +16,7 @@ def BlockGatingUnit(use_bias: bool = True, name: str = "block_gating_unit"):
         v = layers.LayerNormalization(name=f"{name}_intermediate_layernorm")(v)
         n = K.int_shape(x)[-2]  # get spatial dim
         v = SwapAxes()(v, -1, -2)
-        v = layers.Dense(n, use_bias=use_bias)(v)
+        v = layers.Dense(n, use_bias=use_bias, name=f"{name}_dense")(v)
         v = SwapAxes()(v, -1, -2)
         return u * (v + 1.0)
 

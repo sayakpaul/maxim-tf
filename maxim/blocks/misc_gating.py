@@ -117,7 +117,7 @@ def GetSpatialGatingWeights(
         u = BlockImages()(u, patch_size=(fh, fw))
         dim_u = K.int_shape(u)[-3]
         u = SwapAxes()(u, -1, -3)
-        u = layers.Dense(dim_u, use_bias=use_bias)(u)
+        u = layers.Dense(dim_u, use_bias=use_bias, name=f"{name}_grid_dense")(u)
         u = SwapAxes()(u, -1, -3)
         u = UnblockImages()(u, grid_size=(gh, gw), patch_size=(fh, fw))
 
@@ -127,7 +127,7 @@ def GetSpatialGatingWeights(
         v = BlockImages()(v, patch_size=(fh, fw))
         dim_v = v.shape[-2]
         v = SwapAxes()(v, -1, -2)
-        v = layers.Dense(dim_v, use_bias=use_bias)(v)
+        v = layers.Dense(dim_v, use_bias=use_bias, name=f"{name}_block_dense")(v)
         v = SwapAxes()(v, -1, -2)
         v = UnblockImages()(v, grid_size=(gh, gw), patch_size=(fh, fw))
 
@@ -155,9 +155,9 @@ def CrossGatingBlock(
     def apply(x, y):
         # Upscale Y signal, y is the gating signal.
         if upsample_y:
-            y = ConvT_up(filters=features, use_bias=use_bias)(y)
+            y = ConvT_up(filters=features, use_bias=use_bias, name=f"{name}_conv_t")(y)
 
-        x = Conv1x1(filters=features, use_bias=use_bias)(x)
+        x = Conv1x1(filters=features, use_bias=use_bias, name=f"{name}_conv1")(x)
         n, h, w, num_channels = (
             K.int_shape(x)[0],
             K.int_shape(x)[1],
@@ -165,7 +165,7 @@ def CrossGatingBlock(
             K.int_shape(x)[3],
         )
 
-        y = Conv1x1(filters=num_channels, use_bias=use_bias)(y)
+        y = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_conv2")(y)
 
         shortcut_x = x
         shortcut_y = y
