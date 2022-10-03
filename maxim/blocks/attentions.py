@@ -111,24 +111,24 @@ def SAM(
             next stage, and (image) is the output restored image at current stage.
         """
         # Get num_channels
-        x1 = Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_conv1")(x)
+        x1 = Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)
 
         # Output restored image X_s
         if output_channels == 3:
             image = (
-                Conv3x3(filters=output_channels, use_bias=use_bias, name=f"{name}_conv2")(
-                    x
-                )
+                Conv3x3(
+                    filters=output_channels, use_bias=use_bias, name=f"{name}_Conv_1"
+                )(x)
                 + x_image
             )
         else:
             image = Conv3x3(
-                filters=output_channels, use_bias=use_bias, name=f"{name}_conv2"
+                filters=output_channels, use_bias=use_bias, name=f"{name}_Conv_1"
             )(x)
 
         # Get attention maps for num_channels
         x2 = tf.nn.sigmoid(
-            Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_conv3")(image)
+            Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_2")(image)
         )
 
         # Get attended feature maps
