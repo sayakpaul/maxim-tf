@@ -125,7 +125,7 @@ def UNetDecoderBlock(
             dropout_rate=dropout_rate,
             downsample=False,
             use_bias=use_bias,
-            name=f"{name}_unet_encoder",
+            name=f"{name}_UNetEncoderBlock_0",
         )(x, skip=bridge)
 
         return x
