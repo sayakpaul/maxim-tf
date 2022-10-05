@@ -40,7 +40,7 @@ def UNetEncoderBlock(
             x = tf.concat([x, skip], axis=-1)
 
         # convolution-in
-        x = Conv1x1(filters=num_channels, use_bias=use_bias)(x)
+        x = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)
         shortcut_long = x
 
         for i in range(num_groups):
@@ -79,7 +79,9 @@ def UNetEncoderBlock(
             )(x, enc + dec)
 
         if downsample:
-            x_down = Conv_down(filters=num_channels, use_bias=use_bias)(x)
+            x_down = Conv_down(
+                filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_1"
+            )(x)
             return x_down, x
         else:
             return x
@@ -107,7 +109,9 @@ def UNetDecoderBlock(
     """Decoder block in MAXIM."""
 
     def apply(x, bridge=None):
-        x = ConvT_up(filters=num_channels, use_bias=use_bias)(x)
+        x = ConvT_up(
+            filters=num_channels, use_bias=use_bias, name=f"{name}_ConvTranspose_0"
+        )(x)
         x = UNetEncoderBlock(
             num_channels=num_channels,
             num_groups=num_groups,
@@ -121,7 +125,7 @@ def UNetDecoderBlock(
             dropout_rate=dropout_rate,
             downsample=False,
             use_bias=use_bias,
-            name=f"{name}_unet_encoder",
+            name=f"{name}_UNetEncoderBlock_0",
         )(x, skip=bridge)
 
         return x

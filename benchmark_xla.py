@@ -1,3 +1,17 @@
+"""
+Script to benchmark the regular MAXIM model in TF and its JiT-compiled variant.
+
+Expected outputs (benchmarked on my Mac locally):
+
+```
+Benchmarking TF model...
+Average latency (seconds): 3.1694554823999987.
+Benchmarking Jit-compiled TF model...
+Average latency (seconds): 1.2475706969000029.
+```
+"""
+
+
 import timeit
 
 import numpy as np

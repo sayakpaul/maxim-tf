@@ -95,7 +95,7 @@ def MAXIM(
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
             resizing_layer = layers.Resizing(
-                height=h // (2 ** i), width=w // (2 ** i), method="nearest"
+                height=h // (2 ** i), width=w // (2 ** i), interpolation="nearest"
             )
             shortcuts.append(resizing_layer(x))
 
@@ -104,6 +104,7 @@ def MAXIM(
         #      [(64, 64, 3), (128, 128, 3), (256, 256, 3)],]  # Stage-2 outputs
         outputs_all = []
         sam_features, encs_prev, decs_prev = [], [], []
+        total_upsamples = 0
 
         for idx_stage in range(num_stages):
             # Input convolution, get multi-scale input features
@@ -212,7 +213,7 @@ def MAXIM(
                             num_channels=(2 ** i) * features,
                             ratio=2 ** (j - i),
                             use_bias=use_bias,
-                            name=f"stage_{idx_stage}_upsample_ratio_{i}_{j}_encoder",
+                            name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
                         )(enc)
                         for j, enc in enumerate(encs)
                     ],
@@ -232,10 +233,12 @@ def MAXIM(
                         name=f"stage_{idx_stage}_cross_gating_block_{i}",
                     )(signal, global_feature)
                 else:
-                    skips = Conv1x1(filters=(2 ** i) * features, use_bias=use_bias)(
-                        signal
-                    )
-                    skips = Conv3x3(filters=(2 ** i) * features, use_bias=use_bias)(skips)
+                    skips = Conv1x1(
+                        filters=(2 ** i) * features, use_bias=use_bias, name="Conv_0"
+                    )(signal)
+                    skips = Conv3x3(
+                        filters=(2 ** i) * features, use_bias=use_bias, name="Conv_1"
+                    )(skips)
 
                 skip_features.append(skips)
 
@@ -253,7 +256,7 @@ def MAXIM(
                             num_channels=(2 ** i) * features,
                             ratio=2 ** (depth - j - 1 - i),
                             use_bias=use_bias,
-                            name=f"stage_{idx_stage}_upsample_ratio_{i}_{j}_decoder",
+                            name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
                         )(skip)
                         for j, skip in enumerate(skip_features)
                     ],

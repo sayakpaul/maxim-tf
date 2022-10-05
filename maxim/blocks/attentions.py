@@ -23,10 +23,12 @@ def CALayer(
         # 2D global average pooling
         y = layers.GlobalAvgPool2D(keepdims=True)(x)
         # Squeeze (in Squeeze-Excitation)
-        y = Conv1x1(filters=num_channels // reduction, use_bias=use_bias)(y)
+        y = Conv1x1(
+            filters=num_channels // reduction, use_bias=use_bias, name=f"{name}_Conv_0"
+        )(y)
         y = tf.nn.relu(y)
         # Excitation (in Squeeze-Excitation)
-        y = Conv1x1(filters=num_channels, use_bias=use_bias)(y)
+        y = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_1")(y)
         y = tf.nn.sigmoid(y)
         return x * y
 
@@ -52,7 +54,7 @@ def RCAB(
             num_channels=num_channels,
             reduction=reduction,
             use_bias=use_bias,
-            name="channel_attention",
+            name=f"{name}_channel_attention",
         )(x)
         return x + shortcut
 
@@ -74,13 +76,13 @@ def RDCAB(
             mlp_dim=num_channels,
             dropout_rate=dropout_rate,
             use_bias=use_bias,
-            name="channel_mixing",
+            name=f"{name}_channel_mixing",
         )(y)
         y = CALayer(
             num_channels=num_channels,
             reduction=reduction,
             use_bias=use_bias,
-            name="channel_attention",
+            name=f"{name}_channel_attention",
         )(y)
         x = x + y
         return x
@@ -109,16 +111,25 @@ def SAM(
             next stage, and (image) is the output restored image at current stage.
         """
         # Get num_channels
-        x1 = Conv3x3(filters=num_channels, use_bias=use_bias)(x)
+        x1 = Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)
 
         # Output restored image X_s
         if output_channels == 3:
-            image = Conv3x3(filters=output_channels, use_bias=use_bias)(x) + x_image
+            image = (
+                Conv3x3(
+                    filters=output_channels, use_bias=use_bias, name=f"{name}_Conv_1"
+                )(x)
+                + x_image
+            )
         else:
-            image = Conv3x3(filters=output_channels, use_bias=use_bias)(x)
+            image = Conv3x3(
+                filters=output_channels, use_bias=use_bias, name=f"{name}_Conv_1"
+            )(x)
 
         # Get attention maps for num_channels
-        x2 = tf.nn.sigmoid(Conv3x3(filters=num_channels, use_bias=use_bias)(image))
+        x2 = tf.nn.sigmoid(
+            Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_2")(image)
+        )
 
         # Get attended feature maps
         x1 = x1 * x2
