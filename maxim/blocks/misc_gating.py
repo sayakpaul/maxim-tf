@@ -38,7 +38,7 @@ def ResidualSplitHeadMultiAxisGmlpLayer(
             K.int_shape(x)[2],
             K.int_shape(x)[3],
         )
-        x = layers.LayerNormalization(name=f"{name}_LayerNorm_in")(x)
+        x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_in")(x)
 
         x = layers.Dense(
             int(num_channels) * input_proj_factor,
@@ -102,7 +102,7 @@ def GetSpatialGatingWeights(
         )
 
         # input projection
-        x = layers.LayerNormalization(name=f"{name}_LayerNorm_in")(x)
+        x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_in")(x)
         x = layers.Dense(
             num_channels * input_proj_factor,
             use_bias=use_bias,
@@ -173,7 +173,7 @@ def CrossGatingBlock(
         shortcut_y = y
 
         # Get gating weights from X
-        x = layers.LayerNormalization(name=f"{name}_LayerNorm_x")(x)
+        x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_x")(x)
         x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(x)
         x = tf.nn.gelu(x)
         gx = GetSpatialGatingWeights(
@@ -186,7 +186,7 @@ def CrossGatingBlock(
         )(x)
 
         # Get gating weights from Y
-        y = layers.LayerNormalization(name=f"{name}_LayerNorm_y")(y)
+        y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_y")(y)
         y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(y)
         y = tf.nn.gelu(y)
         gy = GetSpatialGatingWeights(

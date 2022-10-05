@@ -46,7 +46,7 @@ def RCAB(
 
     def apply(x):
         shortcut = x
-        x = layers.LayerNormalization(name=f"{name}_LayerNorm")(x)
+        x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm")(x)
         x = Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_conv1")(x)
         x = tf.nn.leaky_relu(x, alpha=lrelu_slope)
         x = Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_conv2")(x)
@@ -71,7 +71,7 @@ def RDCAB(
     """Residual dense channel attention block. Used in Bottlenecks."""
 
     def apply(x):
-        y = layers.LayerNormalization(name=f"{name}_LayerNorm")(x)
+        y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm")(x)
         y = MlpBlock(
             mlp_dim=num_channels,
             dropout_rate=dropout_rate,
