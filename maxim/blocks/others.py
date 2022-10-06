@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
+from ..layers import Resizing
+
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 
 
@@ -39,8 +41,12 @@ def UpSampleRatio(
             K.int_shape(x)[3],
         )
 
-        x = layers.Resizing(
-            height=tf.cast(h * ratio, tf.int32), width=tf.cast(w * ratio, tf.int32)
+        # Following `jax.image.resize()`
+        x = Resizing(
+            height=tf.cast(h * ratio, tf.int32),
+            width=tf.cast(w * ratio, tf.int32),
+            method="bilinear",
+            antialias=True,
         )(x)
 
         x = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)

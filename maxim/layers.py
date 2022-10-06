@@ -1,3 +1,5 @@
+import einops
+import tensorflow as tf
 from tensorflow.experimental import numpy as tnp
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
@@ -17,15 +19,20 @@ class BlockImages(layers.Layer):
 
         grid_height, grid_width = h // patch_size[0], w // patch_size[1]
 
-        x = layers.Reshape(
-            (grid_height * patch_size[0], grid_width * patch_size[1], num_channels)
-        )(x)
-
-        x = layers.Reshape(
-            (-1, grid_height * grid_width, patch_size[0] * patch_size[1], num_channels)
-        )(x)
+        x = einops.rearrange(
+            x,
+            "n (gh fh) (gw fw) c -> n (gh gw) (fh fw) c",
+            gh=grid_height,
+            gw=grid_width,
+            fh=patch_size[0],
+            fw=patch_size[1],
+        )
 
         return x
+
+    def get_config(self):
+        config = super().get_config().copy()
+        return config
 
 
 class UnblockImages(layers.Layer):
@@ -33,17 +40,20 @@ class UnblockImages(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, x, grid_size, patch_size):
-        num_channels = K.int_shape(x)[-1]
-
-        x = layers.Reshape(
-            (grid_size[0] * grid_size[1], patch_size[0] * patch_size[1], num_channels)
-        )(x)
-
-        x = layers.Reshape(
-            (grid_size[0] * patch_size[0], grid_size[1] * patch_size[1], num_channels)
-        )(x)
+        x = einops.rearrange(
+            x,
+            "n (gh gw) (fh fw) c -> n (gh fh) (gw fw) c",
+            gh=grid_size[0],
+            gw=grid_size[1],
+            fh=patch_size[0],
+            fw=patch_size[1],
+        )
 
         return x
+
+    def get_config(self):
+        config = super().get_config().copy()
+        return config
 
 
 class SwapAxes(layers.Layer):
@@ -52,3 +62,36 @@ class SwapAxes(layers.Layer):
 
     def call(self, x, axis_one, axis_two):
         return tnp.swapaxes(x, axis_one, axis_two)
+
+    def get_config(self):
+        config = super().get_config().copy()
+        return config
+
+
+class Resizing(layers.Layer):
+    def __init__(self, height, width, antialias=True, method="bilinear", **kwargs):
+        super().__init__(**kwargs)
+        self.height = height
+        self.width = width
+        self.antialias = antialias
+        self.method = method
+
+    def call(self, x):
+        return tf.image.resize(
+            x,
+            size=(self.height, self.width),
+            antialias=self.antialias,
+            method=self.method,
+        )
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update(
+            {
+                "height": self.height,
+                "width": self.width,
+                "antialias": self.antialias,
+                "method": self.method,
+            }
+        )
+        return config

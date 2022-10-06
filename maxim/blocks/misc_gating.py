@@ -174,7 +174,9 @@ def CrossGatingBlock(
 
         # Get gating weights from X
         x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_x")(x)
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(
+            x
+        )
         x = tf.nn.gelu(x)
         gx = GetSpatialGatingWeights(
             features=num_channels,
@@ -187,7 +189,9 @@ def CrossGatingBlock(
 
         # Get gating weights from Y
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_y")(y)
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(
+            y
+        )
         y = tf.nn.gelu(y)
         gy = GetSpatialGatingWeights(
             features=num_channels,
@@ -200,12 +204,16 @@ def CrossGatingBlock(
 
         # Apply cross gating: X = X * GY, Y = Y * GX
         y = y * gx
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(
+            y
+        )
         y = layers.Dropout(dropout_rate)(y)
         y = y + shortcut_y
 
         x = x * gy  # gating x using y
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(
+            x
+        )
         x = layers.Dropout(dropout_rate)(x)
         x = x + y + shortcut_x  # get all aggregated signals
         return x, y
