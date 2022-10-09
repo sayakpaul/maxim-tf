@@ -108,7 +108,6 @@ def MAXIM(
         #      [(64, 64, 3), (128, 128, 3), (256, 256, 3)],]  # Stage-2 outputs
         outputs_all = []
         sam_features, encs_prev, decs_prev = [], [], []
-        total_upsamples = 0
 
         for idx_stage in range(num_stages):
             # Input convolution, get multi-scale input features

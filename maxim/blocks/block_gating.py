@@ -51,7 +51,7 @@ def BlockGmlpLayer(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(y)
-        y = tf.nn.gelu(y)
+        y = tf.nn.gelu(y, approximate=True)
         y = BlockGatingUnit(use_bias=use_bias, name=f"{name}_BlockGatingUnit")(y)
         y = layers.Dense(
             num_channels,

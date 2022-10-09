@@ -45,7 +45,7 @@ def ResidualSplitHeadMultiAxisGmlpLayer(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(x)
-        x = tf.nn.gelu(x)
+        x = tf.nn.gelu(x, approximate=True)
 
         u, v = tf.split(x, 2, axis=-1)
 
@@ -108,7 +108,7 @@ def GetSpatialGatingWeights(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(x)
-        x = tf.nn.gelu(x)
+        x = tf.nn.gelu(x, approximate=True)
         u, v = tf.split(x, 2, axis=-1)
 
         # Get grid MLP weights
@@ -174,10 +174,8 @@ def CrossGatingBlock(
 
         # Get gating weights from X
         x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_x")(x)
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(
-            x
-        )
-        x = tf.nn.gelu(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(x)
+        x = tf.nn.gelu(x, approximate=True)
         gx = GetSpatialGatingWeights(
             features=num_channels,
             block_size=block_size,
@@ -189,10 +187,8 @@ def CrossGatingBlock(
 
         # Get gating weights from Y
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_y")(y)
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(
-            y
-        )
-        y = tf.nn.gelu(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(y)
+        y = tf.nn.gelu(y, approximate=True)
         gy = GetSpatialGatingWeights(
             features=num_channels,
             block_size=block_size,
@@ -204,16 +200,12 @@ def CrossGatingBlock(
 
         # Apply cross gating: X = X * GY, Y = Y * GX
         y = y * gx
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(
-            y
-        )
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(y)
         y = layers.Dropout(dropout_rate)(y)
         y = y + shortcut_y
 
         x = x * gy  # gating x using y
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(
-            x
-        )
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(x)
         x = layers.Dropout(dropout_rate)(x)
         x = x + y + shortcut_x  # get all aggregated signals
         return x, y

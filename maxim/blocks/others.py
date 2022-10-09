@@ -20,7 +20,7 @@ def MlpBlock(
     def apply(x):
         d = K.int_shape(x)[-1]
         x = layers.Dense(mlp_dim, use_bias=use_bias, name=f"{name}_Dense_0")(x)
-        x = tf.nn.gelu(x)
+        x = tf.nn.gelu(x, approximate=True)
         x = layers.Dropout(dropout_rate)(x)
         x = layers.Dense(d, use_bias=use_bias, name=f"{name}_Dense_1")(x)
         return x

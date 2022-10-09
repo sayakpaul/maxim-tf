@@ -16,14 +16,11 @@
 
 import collections
 import os
-import sys
 
 import numpy as np
 import tensorflow as tf
 from absl import app, flags
 from PIL import Image
-
-sys.path.append("..")
 
 from create_maxim_model import Model
 from maxim.configs import MAXIM_CONFIGS
@@ -52,13 +49,7 @@ _MODEL_VARIANT_DICT = {
     "Enhancement": "S-2",
 }
 
-# _MODEL_CONFIGS = {
-#     "variant": "",
-#     "dropout_rate": 0.0,
-#     "num_outputs": 3,
-#     "use_bias": True,
-#     "num_supervision_scales": 3,
-# }
+_IMG_SIZE = 256
 
 
 def recover_tree(keys, values):
@@ -332,8 +323,6 @@ def make_shape_even(image):
 
 
 def main(_):
-    # params = get_params(FLAGS.ckpt_path)
-
     if FLAGS.save_images:
         os.makedirs(FLAGS.output_dir, exist_ok=True)
 
@@ -350,11 +339,7 @@ def main(_):
         ]
     num_images = len(input_filenames)
 
-    # model_mod = importlib.import_module(f'maxim.models.{_MODEL_FILENAME}')
-    # model_configs = ml_collections.ConfigDict(_MODEL_CONFIGS)
-    # model_configs.variant = _MODEL_VARIANT_DICT[FLAGS.task]
-    # model = model_mod.Model(**model_configs)
-
+    # reference: https://github.com/google-research/maxim/blob/main/maxim/run_eval.py#L45-#L61
     configs = MAXIM_CONFIGS.get(_MODEL_VARIANT_DICT[FLAGS.task])
     configs.update(
         {
@@ -388,7 +373,7 @@ def main(_):
         input_img = make_shape_even(input_img)
         height_even, width_even = input_img.shape[0], input_img.shape[1]
 
-        # # padding images to be multiplies of 64
+        # padding images to be multiplies of 64
         input_img = mod_padding_symmetric(input_img, factor=64)
 
         if FLAGS.geometric_ensemble:
@@ -396,7 +381,9 @@ def main(_):
         else:
             input_img = np.expand_dims(input_img, axis=0)
 
-        input_img = tf.keras.layers.CenterCrop(256, 256)(tf.convert_to_tensor(input_img))
+        input_img = tf.keras.layers.CenterCrop(_IMG_SIZE, _IMG_SIZE)(
+            tf.convert_to_tensor(input_img)
+        )
 
         # handle multi-stage outputs, obtain the last scale output of last stage
         preds = model.predict(input_img)

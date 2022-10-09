@@ -52,7 +52,7 @@ def GridGmlpLayer(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(y)
-        y = tf.nn.gelu(y)
+        y = tf.nn.gelu(y, approximate=True)
         y = GridGatingUnit(use_bias=use_bias, name=f"{name}_GridGatingUnit")(y)
         y = layers.Dense(
             num_channels,
