@@ -1,6 +1,19 @@
 """
 Script to port the pre-trained JAX params of MAXIM to TF.
-(todo): add usage docstring.
+
+Usage:
+    python convert_to_tf.py
+
+The above will convert a MAXIM-3S model trained on the denoising task with the
+SIDD dataset. You can find the tasks and checkpoints supported by MAXIM here:
+https://github.com/google-research/maxim#results-and-pre-trained-models.
+
+So, to convert the pre-trained JAX params (for deblurring on GoPro dataset, say) to TF,
+you can run the following:
+    
+    python convert_to_tf.py \
+        --task Deblurring \
+        --ckpt_path gs://gresearch/maxim/ckpt/Deblurring/GoPro/checkpoint.npz
 
 """
 
@@ -163,6 +176,7 @@ def main(args):
     assert task == task_from_ckpt, "Provided task and provided checkpoints differ."
     f" Task provided: {task}, task dervived from checkpoints: {task_from_ckpt}."
 
+    # From https://github.com/google-research/maxim/blob/main/maxim/run_eval.py#L55
     variant = _MODEL_VARIANT_DICT[task]
     configs = MAXIM_CONFIGS.get(variant)
     configs.update(
@@ -182,6 +196,9 @@ def main(args):
     tf_params_path = f"{variant}_{task.lower()}_{dataset_name}.h5"
     tf_model.save_weights(tf_params_path)
     print(f"Model params serialized to {tf_params_path}.")
+    saved_model_path = tf_params_path.replace(".h5", "")
+    tf_model.save(saved_model_path)
+    print(f"SavedModel serialized to {saved_model_path}.")
 
 
 def parse_args():
