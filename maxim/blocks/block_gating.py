@@ -13,7 +13,9 @@ def BlockGatingUnit(use_bias: bool = True, name: str = "block_gating_unit"):
 
     def apply(x):
         u, v = tf.split(x, 2, axis=-1)
-        v = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_intermediate_layernorm")(v)
+        v = layers.LayerNormalization(
+            epsilon=1e-06, name=f"{name}_intermediate_layernorm"
+        )(v)
         n = K.int_shape(x)[-2]  # get spatial dim
         v = SwapAxes()(v, -1, -2)
         v = layers.Dense(n, use_bias=use_bias, name=f"{name}_Dense_0")(v)
@@ -49,7 +51,7 @@ def BlockGmlpLayer(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(y)
-        y = tf.nn.gelu(y)
+        y = tf.nn.gelu(y, approximate=True)
         y = BlockGatingUnit(use_bias=use_bias, name=f"{name}_BlockGatingUnit")(y)
         y = layers.Dense(
             num_channels,

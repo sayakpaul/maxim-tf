@@ -9,6 +9,7 @@ from .blocks.bottleneck import BottleneckBlock
 from .blocks.misc_gating import CrossGatingBlock
 from .blocks.others import UpSampleRatio
 from .blocks.unet import UNetDecoderBlock, UNetEncoderBlock
+from .layers import Resizing
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 Conv3x3 = functools.partial(layers.Conv2D, kernel_size=(3, 3), padding="same")
@@ -94,9 +95,12 @@ def MAXIM(
 
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
-            resizing_layer = layers.Resizing(
-                height=h // (2 ** i), width=w // (2 ** i), interpolation="nearest"
-            )
+            resizing_layer = Resizing(
+                height=h // (2 ** i),
+                width=w // (2 ** i),
+                method="nearest",
+                antialias=True,
+            )  # Following `jax.image.resize()`.
             shortcuts.append(resizing_layer(x))
 
         # store outputs from all stages and all scales
@@ -104,7 +108,6 @@ def MAXIM(
         #      [(64, 64, 3), (128, 128, 3), (256, 256, 3)],]  # Stage-2 outputs
         outputs_all = []
         sam_features, encs_prev, decs_prev = [], [], []
-        total_upsamples = 0
 
         for idx_stage in range(num_stages):
             # Input convolution, get multi-scale input features

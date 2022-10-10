@@ -13,7 +13,9 @@ def GridGatingUnit(use_bias: bool = True, name: str = "grid_gating_unit"):
 
     def apply(x):
         u, v = tf.split(x, 2, axis=-1)
-        v = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_intermediate_layernorm")(v)
+        v = layers.LayerNormalization(
+            epsilon=1e-06, name=f"{name}_intermediate_layernorm"
+        )(v)
         n = K.int_shape(x)[-3]  # get spatial dim
         v = SwapAxes()(v, -1, -3)
         v = layers.Dense(n, use_bias=use_bias, name=f"{name}_Dense_0")(v)
@@ -50,7 +52,7 @@ def GridGmlpLayer(
             use_bias=use_bias,
             name=f"{name}_in_project",
         )(y)
-        y = tf.nn.gelu(y)
+        y = tf.nn.gelu(y, approximate=True)
         y = GridGatingUnit(use_bias=use_bias, name=f"{name}_GridGatingUnit")(y)
         y = layers.Dense(
             num_channels,
