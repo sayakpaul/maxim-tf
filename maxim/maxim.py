@@ -102,8 +102,9 @@ def MAXIM(
                 height=h // (2 ** i),
                 width=w // (2 ** i),
                 method="nearest",
-                antialias=True,
-            )  # Following `jax.image.resize()`.
+                antialias=True,  # Following `jax.image.resize()`.
+                name=f"initial_resizing_{K.get_uid('Resizing')}",
+            )
             shortcuts.append(resizing_layer(x))
 
         # store outputs from all stages and all scales

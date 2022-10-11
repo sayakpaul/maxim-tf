@@ -125,7 +125,7 @@ def GetSpatialGatingWeights(
         fh, fw = block_size
         gh, gw = h // fh, w // fw
         v = BlockImages()(v, patch_size=(fh, fw))
-        dim_v = v.shape[-2]
+        dim_v = K.int_shape(v)[-2]
         v = SwapAxes()(v, -1, -2)
         v = layers.Dense(dim_v, use_bias=use_bias, name=f"{name}_Dense_1")(v)
         v = SwapAxes()(v, -1, -2)

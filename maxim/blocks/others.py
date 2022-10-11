@@ -43,10 +43,11 @@ def UpSampleRatio(
 
         # Following `jax.image.resize()`
         x = Resizing(
-            height=tf.cast(h * ratio, tf.int32),
-            width=tf.cast(w * ratio, tf.int32),
+            height=int(h * ratio),
+            width=int(w * ratio),
             method="bilinear",
             antialias=True,
+            name=f"{name}_resizing_{K.get_uid('Resizing')}",
         )(x)
 
         x = Conv1x1(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_0")(x)

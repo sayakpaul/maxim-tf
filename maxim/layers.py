@@ -5,6 +5,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
 
+@tf.keras.utils.register_keras_serializable("maxim")
 class BlockImages(layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -35,6 +36,7 @@ class BlockImages(layers.Layer):
         return config
 
 
+@tf.keras.utils.register_keras_serializable("maxim")
 class UnblockImages(layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -56,6 +58,7 @@ class UnblockImages(layers.Layer):
         return config
 
 
+@tf.keras.utils.register_keras_serializable("maxim")
 class SwapAxes(layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -68,6 +71,7 @@ class SwapAxes(layers.Layer):
         return config
 
 
+@tf.keras.utils.register_keras_serializable("maxim")
 class Resizing(layers.Layer):
     def __init__(self, height, width, antialias=True, method="bilinear", **kwargs):
         super().__init__(**kwargs)
