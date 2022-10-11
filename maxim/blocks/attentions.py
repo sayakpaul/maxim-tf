@@ -16,6 +16,7 @@ def CALayer(
     name: str = "channel_attention",
 ):
     """Squeeze-and-excitation block for channel attention.
+
     ref: https://arxiv.org/abs/1709.01507
     """
 
@@ -98,6 +99,7 @@ def SAM(
 ):
 
     """Supervised attention module for multi-stage training.
+
     Introduced by MPRNet [CVPR2021]: https://github.com/swz30/MPRNet
     """
 

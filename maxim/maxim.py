@@ -45,8 +45,10 @@ def MAXIM(
     dropout_rate: float = 0.0,
 ):
     """The MAXIM model function with multi-stage and multi-scale supervision.
+
     For more model details, please check the CVPR paper:
     MAXIM: MUlti-Axis MLP for Image Processing (https://arxiv.org/abs/2201.02973)
+
     Attributes:
       features: initial hidden dimension for the input resolution.
       depth: the number of downsampling depth for the model.
@@ -72,6 +74,7 @@ def MAXIM(
       channels_reduction: the channel reduction factor for SE layer.
       num_outputs: the output channels.
       dropout_rate: Dropout rate.
+
     Returns:
       The output contains a list of arrays consisting of multi-stage multi-scale
       outputs. For example, if num_stages = num_supervision_scales = 3 (the

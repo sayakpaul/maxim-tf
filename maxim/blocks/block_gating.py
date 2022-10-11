@@ -7,6 +7,7 @@ from ..layers import BlockImages, SwapAxes, UnblockImages
 
 def BlockGatingUnit(use_bias: bool = True, name: str = "block_gating_unit"):
     """A SpatialGatingUnit as defined in the gMLP paper.
+
     The 'spatial' dim is defined as the **second last**.
     If applied on other dims, you should swapaxes first.
     """

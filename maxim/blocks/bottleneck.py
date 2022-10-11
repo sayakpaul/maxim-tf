@@ -24,8 +24,6 @@ def BottleneckBlock(
     """The bottleneck block consisting of multi-axis gMLP block and RDCAB."""
 
     def apply(x):
-        """Applies the Mixer block to inputs."""
-
         # input projection
         x = Conv1x1(filters=features, use_bias=use_bias, name=f"{name}_input_proj")(x)
         shortcut_long = x

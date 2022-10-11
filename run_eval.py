@@ -358,7 +358,20 @@ def main(_):
         else:
             input_img = np.expand_dims(input_img, axis=0)
 
+        # resize to the bigger side and then take a crop.
+        # (since the model cannot operate on arbitrary input resolutions yet,
+        # there's a hack, see below)
         input_img = resize_image(tf.convert_to_tensor(input_img), _IMG_SIZE)
+
+        # # To allow the model to operate on arbitrary input shapes, we need to instantiate
+        # # the model every time there's a new input with new spatial resolutions.
+        # # Once the model is initialized, we just load the weights and obtain predictions.
+        # # If this path is followed, please comment the `resize_image()` step above.
+        # print("Initializing model and loading model weights.")
+        # configs.update({"input_resolution": (input_img.shape[1], input_img.shape[2])})
+        # model = Model(**configs)
+        # model.load_weights(FLAGS.ckpt_path)
+        # print("Model successfully initialized and weights loaded.")
 
         # handle multi-stage outputs, obtain the last scale output of last stage
         preds = model.predict(input_img)
@@ -373,9 +386,8 @@ def main(_):
         else:
             preds = np.array(preds[0], np.float32)
 
-        # print(f"Predictions: {preds.shape, preds[0, :3]}")
-
-        # unpad images to get the original resolution
+        # # Only uncomment if you didn't resize the images with `resize_image()`.
+        # # unpad images to get the original resolution
         # new_height, new_width = preds.shape[0], preds.shape[1]
         # h_start = new_height // 2 - height_even // 2
         # h_end = h_start + height
