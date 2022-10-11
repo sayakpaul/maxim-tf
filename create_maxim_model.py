@@ -24,7 +24,7 @@ def Model(variant=None, input_resolution=(256, 256), **kw) -> keras.Model:
 
     if "variant" in kw:
         _ = kw.pop("variant")
-    if input_resolution in kw:
+    if "input_resolution" in kw:
         _ = kw.pop("input_resolution")
     model_name = kw.pop("name")
 
