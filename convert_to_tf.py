@@ -196,9 +196,9 @@ def main(args):
     tf_params_path = f"{variant}_{task.lower()}_{dataset_name}.h5"
     tf_model.save_weights(tf_params_path)
     print(f"Model params serialized to {tf_params_path}.")
-    saved_model_path = tf_params_path.replace(".h5", "")
-    tf_model.save(saved_model_path)
-    print(f"SavedModel serialized to {saved_model_path}.")
+    # saved_model_path = tf_params_path.replace(".h5", "")
+    # tf_model.save(saved_model_path)
+    # print(f"SavedModel serialized to {saved_model_path}.")
 
 
 def parse_args():
