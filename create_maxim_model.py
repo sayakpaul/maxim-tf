@@ -28,8 +28,9 @@ def Model(variant=None, input_resolution=(256, 256), **kw) -> keras.Model:
         _ = kw.pop("input_resolution")
     model_name = kw.pop("name")
 
-    inputs = keras.Input((*input_resolution, 3))
     maxim_model = maxim.MAXIM(**kw)
+
+    inputs = keras.Input((*input_resolution, 3))
     outputs = maxim_model(inputs)
     final_model = keras.Model(inputs, outputs, name=f"{model_name}_model")
 
