@@ -14,6 +14,7 @@
 
 """Modified from https://github.com/google-research/maxim/blob/main/maxim/run_eval.py"""
 
+import copy
 import os
 
 import numpy as np
@@ -39,7 +40,6 @@ flags.DEFINE_boolean("has_target", True, "Whether has corresponding gt image.")
 flags.DEFINE_boolean("save_images", True, "Dump predicted images.")
 flags.DEFINE_boolean("geometric_ensemble", False, "Whether use ensemble infernce.")
 
-
 _MODEL_VARIANT_DICT = {
     "Denoising": "S-3",
     "Deblurring": "S-3",
@@ -47,6 +47,7 @@ _MODEL_VARIANT_DICT = {
     "Dehazing": "S-2",
     "Enhancement": "S-2",
 }
+
 
 _IMG_SIZE = 256
 
@@ -316,22 +317,12 @@ def main(_):
         ]
     num_images = len(input_filenames)
 
-    # reference: https://github.com/google-research/maxim/blob/main/maxim/run_eval.py#L45-#L61
-    configs = MAXIM_CONFIGS.get(_MODEL_VARIANT_DICT[FLAGS.task])
-    configs.update(
-        {
-            "variant": _MODEL_VARIANT_DICT[FLAGS.task],
-            "dropout_rate": 0.0,
-            "num_outputs": 3,
-            "use_bias": True,
-            "num_supervision_scales": 3,
-        }
-    )
-
     print("Initializing model and loading model weights.")
-    model = Model(**configs)
-    model.load_weights(FLAGS.ckpt_path)
+    model = tf.keras.models.load_model(FLAGS.ckpt_path)
     print("Model successfully initialized and weights loaded.")
+
+    # Optionally, clone the model in case reinitialization is needed.
+    model_old = copy.deepcopy(model)
 
     psnr_all = []
 
@@ -367,10 +358,21 @@ def main(_):
         # # the model every time there's a new input with new spatial resolutions.
         # # Once the model is initialized, we just load the weights and obtain predictions.
         # # If this path is followed, please comment the `resize_image()` step above.
+        # # reference: https://github.com/google-research/maxim/blob/main/maxim/run_eval.py#L45-#L61
+        # configs = MAXIM_CONFIGS.get(_MODEL_VARIANT_DICT[FLAGS.task])
+        # configs.update(
+        #     {
+        #         "variant": _MODEL_VARIANT_DICT[FLAGS.task],
+        #         "dropout_rate": 0.0,
+        #         "num_outputs": 3,
+        #         "use_bias": True,
+        #         "num_supervision_scales": 3,
+        #     }
+        # )
         # print("Initializing model and loading model weights.")
         # configs.update({"input_resolution": (input_img.shape[1], input_img.shape[2])})
         # model = Model(**configs)
-        # model.load_weights(FLAGS.ckpt_path)
+        # model.set_weights(model_old.get_weights())
         # print("Model successfully initialized and weights loaded.")
 
         # handle multi-stage outputs, obtain the last scale output of last stage
