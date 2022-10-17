@@ -51,6 +51,8 @@ _MODEL_VARIANT_DICT = {
 
 _IMG_SIZE = 256
 
+_VALID_IMG_EXT = ["jpeg", "jpg", "png", "gif"]
+
 
 def mod_padding_symmetric(image, factor=64):
     """Padding the image to be divided by factor."""
@@ -272,9 +274,10 @@ def deaugment_image(images, times=8):
 
 def is_image_file(filename):
     """Check if it is an valid image file by extension."""
+
     return any(
-        filename.endswith(extension)
-        for extension in ["jpeg", "JPEG", "jpg", "png", "JPG", "PNG", "gif"]
+        (filename.endswith(extension)) or (filename.endswith(extension.upper()))
+        for extension in _VALID_IMG_EXT
     )
 
 
