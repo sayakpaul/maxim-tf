@@ -26,6 +26,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from huggingface_hub import push_to_hub_keras
 
 from create_maxim_model import Model
 from maxim.configs import MAXIM_CONFIGS
@@ -194,11 +195,14 @@ def main(args):
 
     dataset_name = args.ckpt_path.split("/")[-2].lower()
     tf_params_path = f"{variant}_{task.lower()}_{dataset_name}.h5"
+
     tf_model.save_weights(tf_params_path)
     print(f"Model params serialized to {tf_params_path}.")
     saved_model_path = tf_params_path.replace(".h5", "")
     tf_model.save(saved_model_path)
     print(f"SavedModel serialized to {saved_model_path}.")
+    push_to_hub_keras(tf_model, repo_path_or_name=f"sayakpaul/{saved_model_path}")
+    print("Model pushed to Hugging Face Hub.")
 
 
 def parse_args():
