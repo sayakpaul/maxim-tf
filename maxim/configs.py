@@ -1,3 +1,7 @@
+"""
+Configs based on https://github.com/google-research/maxim/blob/main/maxim/models/maxim.py
+"""
+
 MAXIM_CONFIGS = {
     # params: 6.108515000000001 M, GFLOPS: 93.163716608
     "S-1": {

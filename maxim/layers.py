@@ -1,3 +1,7 @@
+"""
+Layers based on https://github.com/google-research/maxim/blob/main/maxim/models/maxim.py
+"""
+
 import einops
 import tensorflow as tf
 from tensorflow.experimental import numpy as tnp

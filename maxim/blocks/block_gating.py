@@ -1,3 +1,7 @@
+"""
+Blocks based on https://github.com/google-research/maxim/blob/main/maxim/models/maxim.py
+"""
+
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
