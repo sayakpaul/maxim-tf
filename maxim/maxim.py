@@ -103,8 +103,7 @@ def MAXIM(
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
             resizing_layer = Resizing(
-                height=h // (2 ** i),
-                width=w // (2 ** i),
+                ratio=(2 ** i),
                 method="nearest",
                 antialias=True,  # Following `jax.image.resize()`.
                 name=f"initial_resizing_{K.get_uid('Resizing')}",
@@ -222,7 +221,7 @@ def MAXIM(
                     [
                         UpSampleRatio(
                             num_channels=(2 ** i) * features,
-                            ratio=2 ** (j - i),
+                            ratio=int(1 / (2 ** (j - i))),
                             use_bias=use_bias,
                             name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
                         )(enc)
@@ -265,7 +264,7 @@ def MAXIM(
                     [
                         UpSampleRatio(
                             num_channels=(2 ** i) * features,
-                            ratio=2 ** (depth - j - 1 - i),
+                            ratio=int(1 / (2 ** (depth - j - 1 - i))),
                             use_bias=use_bias,
                             name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
                         )(skip)
