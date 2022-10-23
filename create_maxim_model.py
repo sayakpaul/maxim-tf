@@ -4,7 +4,7 @@ from maxim import maxim
 from maxim.configs import MAXIM_CONFIGS
 
 
-def Model(variant=None, input_resolution=(256, 256), **kw) -> keras.Model:
+def Model(variant=None, input_resolution=(None, None), **kw) -> keras.Model:
     """Factory function to easily create a Model variant like "S".
 
     Args:
