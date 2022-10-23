@@ -76,28 +76,28 @@ class SwapAxes(layers.Layer):
 
 
 @tf.keras.utils.register_keras_serializable("maxim")
-class Resizing(layers.Layer):
-    def __init__(self, height, width, antialias=True, method="bilinear", **kwargs):
+class Resizing(tf.keras.layers.Layer):
+    def __init__(self, ratio: int, method="bilinear", antialias=True, **kwargs):
         super().__init__(**kwargs)
-        self.height = height
-        self.width = width
-        self.antialias = antialias
+        self.ratio = ratio
         self.method = method
+        self.antialias = antialias
 
-    def call(self, x):
-        return tf.image.resize(
-            x,
-            size=(self.height, self.width),
-            antialias=self.antialias,
+    def __call__(self, img):
+        n, h, w, c = tf.shape(img)
+        x = tf.image.resize(
+            img,
+            (h // self.ratio, w // self.ratio),
             method=self.method,
+            antialias=self.antialias,
         )
+        return x
 
     def get_config(self):
         config = super().get_config().copy()
         config.update(
             {
-                "height": self.height,
-                "width": self.width,
+                "ratio": self.ratio,
                 "antialias": self.antialias,
                 "method": self.method,
             }
