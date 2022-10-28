@@ -42,6 +42,10 @@ This TensorFlow implementation is in close alignment with [2]. The author of thi
 
 A comprehensive table is available [here](https://github.com/google-research/maxim#results-and-pre-trained-models). The author of this repository validated the results with the converted models qualitatively. 
 
+<div align="center">
+<img src="images/maxim.gif" width=575>
+</div>
+
 ## Inference with the provided sample images
 
 You can run the `run_eval.py` script for this purpose.
