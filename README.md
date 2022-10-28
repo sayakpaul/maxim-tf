@@ -150,3 +150,9 @@ With all that said, the qualitative performance doesn't seem to be disturbed at 
 * ML Developer Programs' team at Google for providing Google Cloud credits.
 * [Gustavo Martins](https://twitter.com/gusthema?lang=en) from Google for initial discussions and reviews of the codebase.
 * [Amy Roberts](https://uk.linkedin.com/in/amy-roberts-70903a6a) from Hugging Face for guiding me in the right direction for handling arbitrary input shapes.
+
+## References
+
+[1] MAXIM paper: https://arxiv.org/abs/2201.02973
+
+[2] MAXIM official GitHub: https://github.com/google-research/maxim
