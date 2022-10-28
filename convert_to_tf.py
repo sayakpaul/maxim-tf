@@ -199,8 +199,6 @@ def main(args):
     tf_model.save_weights(tf_params_path)
     print(f"Model params serialized to {tf_params_path}.")
     saved_model_path = tf_params_path.replace(".h5", "")
-    tf_model.save(saved_model_path)
-    print(f"SavedModel serialized to {saved_model_path}.")
     push_to_hub_keras(tf_model, repo_path_or_name=f"sayakpaul/{saved_model_path}")
     print("Model pushed to Hugging Face Hub.")
 
