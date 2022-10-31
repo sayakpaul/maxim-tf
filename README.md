@@ -16,7 +16,8 @@ MAXIM introduces a backbone that can tackle image denoising, dehazing, deblurrin
 
 The weights of different MAXIM variants are in JAX and they're available in [2]. 
 
-You can find all the TensorFlow MAXIM models [here](https://tfhub.dev/sayakpaul/collections/maxim/1) on TensorFlow Hub as well as on [Hugging Face Hub](https://huggingface.co/sayakpaul).
+You can find all the TensorFlow MAXIM models [here](https://tfhub.dev/sayakpaul/collections/maxim/1) on TensorFlow Hub as
+well as on [Hugging Face Hub](https://huggingface.co/models?pipeline_tag=image-to-image&sort=downloads&search=maxim).
 
 You can try out the models on Hugging Face Spaces:
 
