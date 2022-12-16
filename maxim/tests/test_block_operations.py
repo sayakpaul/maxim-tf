@@ -67,7 +67,9 @@ def test_patch_block_equivalence(random_image, window_size):
     patch_size = window_size
     patched_image_original = BlockImages()(random_image, patch_size=patch_size)
     patched_image_tf, _, _ = TFBlockImages()(random_image, patch_size=patch_size)
-    difference = np.sum((patched_image_original.numpy() - patched_image_tf.numpy()) ** 2)
+    difference = np.sum(
+        (patched_image_original.numpy() - patched_image_tf.numpy()) ** 2
+    )
     assert difference < LOW_THRESHOLD
 
 
@@ -78,7 +80,9 @@ def test_grid_block_equivalence(random_image, window_size):
     patch_size = (height // gh, width // gw)
     patched_image_original = BlockImages()(random_image, patch_size=patch_size)
     patched_image_tf, _, _ = TFBlockImagesByGrid()(random_image, grid_size=grid_size)
-    difference = np.sum((patched_image_original.numpy() - patched_image_tf.numpy()) ** 2)
+    difference = np.sum(
+        (patched_image_original.numpy() - patched_image_tf.numpy()) ** 2
+    )
     assert difference < LOW_THRESHOLD
 
 
@@ -97,12 +101,18 @@ def test_reconstruction_by_grid(random_image, window_size):
 
     # Block and Unblock with TF layers
     patched_image_tf, ph, pw = TFBlockImagesByGrid()(random_image, grid_size=grid_size)
-    reconstructed_image_tf = TFUnblockImages()(patched_image_tf, grid_size=grid_size, patch_size=(ph, pw))
+    reconstructed_image_tf = TFUnblockImages()(
+        patched_image_tf, grid_size=grid_size, patch_size=(ph, pw)
+    )
 
     # Compare implementation diff and reconstruction diff
-    difference_between_implementations = np.sum((reconstructed_original.numpy() - reconstructed_image_tf.numpy()) ** 2)
+    difference_between_implementations = np.sum(
+        (reconstructed_original.numpy() - reconstructed_image_tf.numpy()) ** 2
+    )
     assert difference_between_implementations < LOW_THRESHOLD
-    difference_between_reconstruction = np.sum((random_image.numpy() - reconstructed_image_tf.numpy()) ** 2)
+    difference_between_reconstruction = np.sum(
+        (random_image.numpy() - reconstructed_image_tf.numpy()) ** 2
+    )
     assert difference_between_reconstruction < LOW_THRESHOLD
 
 
@@ -120,10 +130,16 @@ def test_reconstruction(random_image, window_size):
 
     # Block and Unblock with TF layers
     patched_image_tf, gh, gw = TFBlockImages()(random_image, patch_size=patch_size)
-    reconstructed_image_tf = TFUnblockImages()(patched_image_tf, patch_size=patch_size, grid_size=(gh, gw))
+    reconstructed_image_tf = TFUnblockImages()(
+        patched_image_tf, patch_size=patch_size, grid_size=(gh, gw)
+    )
 
     # Compare implementation diff and reconstruction diff
-    difference_between_implementations = np.sum((reconstructed_original.numpy() - reconstructed_image_tf.numpy()) ** 2)
+    difference_between_implementations = np.sum(
+        (reconstructed_original.numpy() - reconstructed_image_tf.numpy()) ** 2
+    )
     assert difference_between_implementations < LOW_THRESHOLD
-    difference_between_reconstruction = np.sum((random_image.numpy() - reconstructed_image_tf.numpy()) ** 2)
+    difference_between_reconstruction = np.sum(
+        (random_image.numpy() - reconstructed_image_tf.numpy()) ** 2
+    )
     assert difference_between_reconstruction < LOW_THRESHOLD

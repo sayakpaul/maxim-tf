@@ -14,8 +14,12 @@ from .grid_gating import GridGmlpLayer
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 Conv3x3 = functools.partial(layers.Conv2D, kernel_size=(3, 3), padding="same")
-ConvT_up = functools.partial(layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same")
-Conv_down = functools.partial(layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same")
+ConvT_up = functools.partial(
+    layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same"
+)
+Conv_down = functools.partial(
+    layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same"
+)
 
 
 def ResidualSplitHeadMultiAxisGmlpLayer(
@@ -112,22 +116,22 @@ def GetSpatialGatingWeights(
         u, v = tf.split(x, 2, axis=-1)
 
         # Get grid MLP weights
-        ghu, gwu = grid_size
-        u, phu, pwu = TFBlockImagesByGrid()(u, grid_size=(ghu, gwu))
-        dim_u = ghu * gwu
+        gh, gw = grid_size
+        u, phu, pwu = TFBlockImagesByGrid()(u, grid_size=(gh, gw))
+        dim_u = gh * gw
         u = SwapAxes()(u, -1, -3)
         u = layers.Dense(dim_u, use_bias=use_bias, name=f"{name}_Dense_0")(u)
         u = SwapAxes()(u, -1, -3)
-        u = TFUnblockImages()(u, grid_size=(ghu, gwu), patch_size=(phu, pwu))
+        u = TFUnblockImages()(u, grid_size=(gh, gw), patch_size=(phu, pwu))
 
         # Get Block MLP weights
-        fhv, fwv = block_size
-        v, ghv, gwv = TFBlockImages()(v, patch_size=(fhv, fwv))
-        dim_v = fhv * fwv
+        fh, fw = block_size
+        v, gh, gw = TFBlockImages()(v, patch_size=(fh, fw))
+        dim_v = fh * fw
         v = SwapAxes()(v, -1, -2)
         v = layers.Dense(dim_v, use_bias=use_bias, name=f"{name}_Dense_1")(v)
         v = SwapAxes()(v, -1, -2)
-        v = TFUnblockImages()(v, patch_size=(fhv, fwv), grid_size=(ghv, gwv))
+        v = TFUnblockImages()(v, patch_size=(fh, fw), grid_size=(gh, gw))
 
         x = tf.concat([u, v], axis=-1)
         x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project")(x)
@@ -153,7 +157,9 @@ def CrossGatingBlock(
     def apply(x, y):
         # Upscale Y signal, y is the gating signal.
         if upsample_y:
-            y = ConvT_up(filters=features, use_bias=use_bias, name=f"{name}_ConvTranspose_0")(y)
+            y = ConvT_up(
+                filters=features, use_bias=use_bias, name=f"{name}_ConvTranspose_0"
+            )(y)
 
         x = Conv1x1(filters=features, use_bias=use_bias, name=f"{name}_Conv_0")(x)
         n, h, w, num_channels = (
@@ -170,7 +176,9 @@ def CrossGatingBlock(
 
         # Get gating weights from X
         x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_x")(x)
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(
+            x
+        )
         x = tf.nn.gelu(x, approximate=True)
         gx = GetSpatialGatingWeights(
             features=num_channels,
@@ -183,7 +191,9 @@ def CrossGatingBlock(
 
         # Get gating weights from Y
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_y")(y)
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(
+            y
+        )
         y = tf.nn.gelu(y, approximate=True)
         gy = GetSpatialGatingWeights(
             features=num_channels,
@@ -196,12 +206,16 @@ def CrossGatingBlock(
 
         # Apply cross gating: X = X * GY, Y = Y * GX
         y = y * gx
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(
+            y
+        )
         y = layers.Dropout(dropout_rate)(y)
         y = y + shortcut_y
 
         x = x * gy  # gating x using y
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(
+            x
+        )
         x = layers.Dropout(dropout_rate)(x)
         x = x + y + shortcut_x  # get all aggregated signals
         return x, y

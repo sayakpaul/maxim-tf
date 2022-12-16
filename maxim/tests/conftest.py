@@ -39,7 +39,8 @@ def random_image_multiple_of_64(request, fix_random, window_size):
     return tf.random.uniform(shape=(1, h_img, w_img, 3), dtype=tf.float32)
 
 
-############################################
+##########################################################################
+########################## Fixtures for model test #######################
 
 
 def Model(variant=None, input_resolution=(None, None), **kw) -> keras.Model:

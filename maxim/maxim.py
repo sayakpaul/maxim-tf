@@ -13,12 +13,16 @@ from .blocks.bottleneck import BottleneckBlock
 from .blocks.misc_gating import CrossGatingBlock
 from .blocks.others import UpSampleRatio
 from .blocks.unet import UNetDecoderBlock, UNetEncoderBlock
-from .layers import ResizingDown
+from .layers import Resizing, ResizingDown
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 Conv3x3 = functools.partial(layers.Conv2D, kernel_size=(3, 3), padding="same")
-ConvT_up = functools.partial(layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same")
-Conv_down = functools.partial(layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same")
+ConvT_up = functools.partial(
+    layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same"
+)
+Conv_down = functools.partial(
+    layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same"
+)
 
 
 def MAXIM(
@@ -98,7 +102,7 @@ def MAXIM(
 
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
-            resizing_layer = ResizingDown(
+            resizing_layer = Resizing(
                 ratio=(2**i),
                 method="nearest",
                 antialias=True,  # Following `jax.image.resize()`.
@@ -126,8 +130,12 @@ def MAXIM(
                 if idx_stage > 0:
                     # use larger blocksize at high-res stages
                     if use_cross_gating:
-                        block_size = block_size_hr if i < high_res_stages else block_size_lr
-                        grid_size = grid_size_hr if i < high_res_stages else block_size_lr
+                        block_size = (
+                            block_size_hr if i < high_res_stages else block_size_lr
+                        )
+                        grid_size = (
+                            grid_size_hr if i < high_res_stages else block_size_lr
+                        )
                         x_scale, _ = CrossGatingBlock(
                             features=(2**i) * features,
                             block_size=block_size,
@@ -237,8 +245,12 @@ def MAXIM(
                         name=f"stage_{idx_stage}_cross_gating_block_{i}",
                     )(signal, global_feature)
                 else:
-                    skips = Conv1x1(filters=(2**i) * features, use_bias=use_bias, name="Conv_0")(signal)
-                    skips = Conv3x3(filters=(2**i) * features, use_bias=use_bias, name="Conv_1")(skips)
+                    skips = Conv1x1(
+                        filters=(2**i) * features, use_bias=use_bias, name="Conv_0"
+                    )(signal)
+                    skips = Conv3x3(
+                        filters=(2**i) * features, use_bias=use_bias, name="Conv_1"
+                    )(skips)
 
                 skip_features.append(skips)
 

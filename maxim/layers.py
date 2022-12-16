@@ -14,7 +14,12 @@ class TFBlockImages(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, image, patch_size):
-        bs, h, w, num_channels = (tf.shape(image)[0], tf.shape(image)[1], tf.shape(image)[2], tf.shape(image)[3])
+        bs, h, w, num_channels = (
+            tf.shape(image)[0],
+            tf.shape(image)[1],
+            tf.shape(image)[2],
+            tf.shape(image)[3],
+        )
         ph, pw = patch_size
         gh = h // ph
         gw = w // pw
@@ -23,8 +28,13 @@ class TFBlockImages(layers.Layer):
         patches = tf.split(patches, ph * pw, axis=0)
         patches = tf.stack(patches, 3)  # (bs, h/p, h/p, p*p, 3)
         patches_dim = tf.shape(patches)
-        patches = tf.reshape(patches, [patches_dim[0], patches_dim[1], patches_dim[2], -1])
-        patches = tf.reshape(patches, (patches_dim[0], patches_dim[1] * patches_dim[2], ph * pw, num_channels))
+        patches = tf.reshape(
+            patches, [patches_dim[0], patches_dim[1], patches_dim[2], -1]
+        )
+        patches = tf.reshape(
+            patches,
+            (patches_dim[0], patches_dim[1] * patches_dim[2], ph * pw, num_channels),
+        )
         return [patches, gh, gw]
 
     def get_config(self):
@@ -37,7 +47,12 @@ class TFBlockImagesByGrid(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, image, grid_size):
-        bs, h, w, num_channels = (tf.shape(image)[0], tf.shape(image)[1], tf.shape(image)[2], tf.shape(image)[3])
+        bs, h, w, num_channels = (
+            tf.shape(image)[0],
+            tf.shape(image)[1],
+            tf.shape(image)[2],
+            tf.shape(image)[3],
+        )
         gh, gw = grid_size
         ph = h // gh
         pw = w // gw
@@ -54,8 +69,13 @@ class TFBlockImagesByGrid(layers.Layer):
         patches = image
         patches = tf.map_fn(fn=lambda x: block_single_image(x), elems=patches)
         patches_dim = tf.shape(patches)
-        patches = tf.reshape(patches, [patches_dim[0], patches_dim[1], patches_dim[2], -1])
-        patches = tf.reshape(patches, (patches_dim[0], patches_dim[1] * patches_dim[2], ph * pw, num_channels))
+        patches = tf.reshape(
+            patches, [patches_dim[0], patches_dim[1], patches_dim[2], -1]
+        )
+        patches = tf.reshape(
+            patches,
+            (patches_dim[0], patches_dim[1] * patches_dim[2], ph * pw, num_channels),
+        )
         return [patches, ph, pw]
 
     def get_config(self):
@@ -68,7 +88,12 @@ class TFUnblockImages(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, x, patch_size, grid_size):
-        bs, grid_sqrt, patch_sqrt, num_channels = (tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2], tf.shape(x)[3])
+        bs, grid_sqrt, patch_sqrt, num_channels = (
+            tf.shape(x)[0],
+            tf.shape(x)[1],
+            tf.shape(x)[2],
+            tf.shape(x)[3],
+        )
         ph, pw = patch_size
         gh, gw = grid_size
 
@@ -100,46 +125,17 @@ class SwapAxes(layers.Layer):
 
 
 @tf.keras.utils.register_keras_serializable("maxim")
-class ResizingDown(tf.keras.layers.Layer):
+class Resizing(tf.keras.layers.Layer):
     def __init__(self, ratio: float, method="bilinear", antialias=True, **kwargs):
         super().__init__(**kwargs)
         self.ratio = ratio
         self.method = method
         self.antialias = antialias
 
-    def __call__(self, img):
-        n, h, w, c = (tf.shape(img)[0], tf.shape(img)[1], tf.shape(img)[2], tf.shape(img)[3])
-        x = tf.image.resize(
-            img,
-            (h // self.ratio, w // self.ratio),
-            method=self.method,
-            antialias=self.antialias,
-        )
-        return x
-
-    def get_config(self):
-        config = super().get_config().copy()
-        config.update(
-            {
-                "ratio": self.ratio,
-                "antialias": self.antialias,
-                "method": self.method,
-            }
-        )
-        return config
-
-
-@tf.keras.utils.register_keras_serializable("maxim")
-class ResizingUp(tf.keras.layers.Layer):
-    def __init__(self, ratio: float, method="bilinear", antialias=True, **kwargs):
-        super().__init__(**kwargs)
-        self.ratio = tf.constant(ratio, dtype=tf.float32)
-        self.method = method
-        self.antialias = antialias
-
-    def __call__(self, img):
+    def call(self, img):
         shape = tf.shape(img)
-        new_sh = self.ratio * tf.cast(shape[1:3], tf.float32)
+
+        new_sh = tf.cast(shape[1:3], tf.float32) // self.ratio
 
         x = tf.image.resize(
             img,
