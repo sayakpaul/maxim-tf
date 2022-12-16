@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
-from ..layers import Resizing, ResizingUp
+from ..layers import Resizing
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 

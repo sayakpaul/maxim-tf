@@ -13,7 +13,7 @@ from .blocks.bottleneck import BottleneckBlock
 from .blocks.misc_gating import CrossGatingBlock
 from .blocks.others import UpSampleRatio
 from .blocks.unet import UNetDecoderBlock, UNetEncoderBlock
-from .layers import Resizing, ResizingDown
+from .layers import Resizing
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 Conv3x3 = functools.partial(layers.Conv2D, kernel_size=(3, 3), padding="same")
