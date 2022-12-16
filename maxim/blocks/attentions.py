@@ -134,7 +134,9 @@ def SAM(
 
         # Get attention maps for num_channels
         x2 = tf.nn.sigmoid(
-            Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_2")(image)
+            Conv3x3(filters=num_channels, use_bias=use_bias, name=f"{name}_Conv_2")(
+                image
+            )
         )
 
         # Get attended feature maps

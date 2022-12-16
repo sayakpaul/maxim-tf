@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
-from ..layers import BlockImages, SwapAxes, UnblockImages
+from ..layers import SwapAxes, TFBlockImages, TFBlockImagesByGrid, TFUnblockImages
 from .block_gating import BlockGmlpLayer
 from .grid_gating import GridGmlpLayer
 
@@ -117,23 +117,21 @@ def GetSpatialGatingWeights(
 
         # Get grid MLP weights
         gh, gw = grid_size
-        fh, fw = h // gh, w // gw
-        u = BlockImages()(u, patch_size=(fh, fw))
-        dim_u = K.int_shape(u)[-3]
+        u, phu, pwu = TFBlockImagesByGrid()(u, grid_size=(gh, gw))
+        dim_u = gh * gw
         u = SwapAxes()(u, -1, -3)
         u = layers.Dense(dim_u, use_bias=use_bias, name=f"{name}_Dense_0")(u)
         u = SwapAxes()(u, -1, -3)
-        u = UnblockImages()(u, grid_size=(gh, gw), patch_size=(fh, fw))
+        u = TFUnblockImages()(u, grid_size=(gh, gw), patch_size=(phu, pwu))
 
         # Get Block MLP weights
         fh, fw = block_size
-        gh, gw = h // fh, w // fw
-        v = BlockImages()(v, patch_size=(fh, fw))
-        dim_v = K.int_shape(v)[-2]
+        v, gh, gw = TFBlockImages()(v, patch_size=(fh, fw))
+        dim_v = fh * fw
         v = SwapAxes()(v, -1, -2)
         v = layers.Dense(dim_v, use_bias=use_bias, name=f"{name}_Dense_1")(v)
         v = SwapAxes()(v, -1, -2)
-        v = UnblockImages()(v, grid_size=(gh, gw), patch_size=(fh, fw))
+        v = TFUnblockImages()(v, patch_size=(fh, fw), grid_size=(gh, gw))
 
         x = tf.concat([u, v], axis=-1)
         x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project")(x)
@@ -178,7 +176,9 @@ def CrossGatingBlock(
 
         # Get gating weights from X
         x = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_x")(x)
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_x")(
+            x
+        )
         x = tf.nn.gelu(x, approximate=True)
         gx = GetSpatialGatingWeights(
             features=num_channels,
@@ -191,7 +191,9 @@ def CrossGatingBlock(
 
         # Get gating weights from Y
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm_y")(y)
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_in_project_y")(
+            y
+        )
         y = tf.nn.gelu(y, approximate=True)
         gy = GetSpatialGatingWeights(
             features=num_channels,
@@ -204,12 +206,16 @@ def CrossGatingBlock(
 
         # Apply cross gating: X = X * GY, Y = Y * GX
         y = y * gx
-        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(y)
+        y = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_y")(
+            y
+        )
         y = layers.Dropout(dropout_rate)(y)
         y = y + shortcut_y
 
         x = x * gy  # gating x using y
-        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(x)
+        x = layers.Dense(num_channels, use_bias=use_bias, name=f"{name}_out_project_x")(
+            x
+        )
         x = layers.Dropout(dropout_rate)(x)
         x = x + y + shortcut_x  # get all aggregated signals
         return x, y
