@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
-from ..layers import Resizing
+from ..layers import ResizingUp
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 
@@ -32,23 +32,13 @@ def MlpBlock(
     return apply
 
 
-def UpSampleRatio(
-    num_channels: int, ratio: float, use_bias: bool = True, name: str = "upsample"
-):
+def UpSampleRatio(num_channels: int, ratio: float, use_bias: bool = True, name: str = "upsample"):
     """Upsample features given a ratio > 0."""
 
     def apply(x):
-        n, h, w, c = (
-            K.int_shape(x)[0],
-            K.int_shape(x)[1],
-            K.int_shape(x)[2],
-            K.int_shape(x)[3],
-        )
-
         # Following `jax.image.resize()`
-        x = Resizing(
-            height=int(h * ratio),
-            width=int(w * ratio),
+        x = ResizingUp(
+            ratio=ratio,
             method="bilinear",
             antialias=True,
             name=f"{name}_resizing_{K.get_uid('Resizing')}",

@@ -13,16 +13,12 @@ from .blocks.bottleneck import BottleneckBlock
 from .blocks.misc_gating import CrossGatingBlock
 from .blocks.others import UpSampleRatio
 from .blocks.unet import UNetDecoderBlock, UNetEncoderBlock
-from .layers import Resizing
+from .layers import ResizingDown
 
 Conv1x1 = functools.partial(layers.Conv2D, kernel_size=(1, 1), padding="same")
 Conv3x3 = functools.partial(layers.Conv2D, kernel_size=(3, 3), padding="same")
-ConvT_up = functools.partial(
-    layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same"
-)
-Conv_down = functools.partial(
-    layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same"
-)
+ConvT_up = functools.partial(layers.Conv2DTranspose, kernel_size=(2, 2), strides=(2, 2), padding="same")
+Conv_down = functools.partial(layers.Conv2D, kernel_size=(4, 4), strides=(2, 2), padding="same")
 
 
 def MAXIM(
@@ -102,9 +98,8 @@ def MAXIM(
 
         # Get multi-scale input images
         for i in range(1, num_supervision_scales):
-            resizing_layer = Resizing(
-                height=h // (2 ** i),
-                width=w // (2 ** i),
+            resizing_layer = ResizingDown(
+                ratio=(2**i),
                 method="nearest",
                 antialias=True,  # Following `jax.image.resize()`.
                 name=f"initial_resizing_{K.get_uid('Resizing')}",
@@ -122,7 +117,7 @@ def MAXIM(
             x_scales = []
             for i in range(num_supervision_scales):
                 x_scale = Conv3x3(
-                    filters=(2 ** i) * features,
+                    filters=(2**i) * features,
                     use_bias=use_bias,
                     name=f"stage_{idx_stage}_input_conv_{i}",
                 )(shortcuts[i])
@@ -131,12 +126,10 @@ def MAXIM(
                 if idx_stage > 0:
                     # use larger blocksize at high-res stages
                     if use_cross_gating:
-                        block_size = (
-                            block_size_hr if i < high_res_stages else block_size_lr
-                        )
+                        block_size = block_size_hr if i < high_res_stages else block_size_lr
                         grid_size = grid_size_hr if i < high_res_stages else block_size_lr
                         x_scale, _ = CrossGatingBlock(
-                            features=(2 ** i) * features,
+                            features=(2**i) * features,
                             block_size=block_size,
                             grid_size=grid_size,
                             dropout_rate=dropout_rate,
@@ -147,7 +140,7 @@ def MAXIM(
                         )(x_scale, sam_features.pop())
                     else:
                         x_scale = Conv1x1(
-                            filters=(2 ** i) * features,
+                            filters=(2**i) * features,
                             use_bias=use_bias,
                             name=f"stage_{idx_stage}_input_catconv_{i}",
                         )(tf.concat([x_scale, sam_features.pop()], axis=-1))
@@ -172,7 +165,7 @@ def MAXIM(
                 dec_prev = decs_prev.pop() if idx_stage > 0 else None
 
                 x, bridge = UNetEncoderBlock(
-                    num_channels=(2 ** i) * features,
+                    num_channels=(2**i) * features,
                     num_groups=num_groups,
                     downsample=True,
                     lrelu_slope=lrelu_slope,
@@ -221,7 +214,7 @@ def MAXIM(
                 signal = tf.concat(
                     [
                         UpSampleRatio(
-                            num_channels=(2 ** i) * features,
+                            num_channels=(2**i) * features,
                             ratio=2 ** (j - i),
                             use_bias=use_bias,
                             name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
@@ -234,7 +227,7 @@ def MAXIM(
                 # Use cross-gating to cross modulate features
                 if use_cross_gating:
                     skips, global_feature = CrossGatingBlock(
-                        features=(2 ** i) * features,
+                        features=(2**i) * features,
                         block_size=block_size,
                         grid_size=grid_size,
                         input_proj_factor=input_proj_factor,
@@ -244,12 +237,8 @@ def MAXIM(
                         name=f"stage_{idx_stage}_cross_gating_block_{i}",
                     )(signal, global_feature)
                 else:
-                    skips = Conv1x1(
-                        filters=(2 ** i) * features, use_bias=use_bias, name="Conv_0"
-                    )(signal)
-                    skips = Conv3x3(
-                        filters=(2 ** i) * features, use_bias=use_bias, name="Conv_1"
-                    )(skips)
+                    skips = Conv1x1(filters=(2**i) * features, use_bias=use_bias, name="Conv_0")(signal)
+                    skips = Conv3x3(filters=(2**i) * features, use_bias=use_bias, name="Conv_1")(skips)
 
                 skip_features.append(skips)
 
@@ -264,7 +253,7 @@ def MAXIM(
                 signal = tf.concat(
                     [
                         UpSampleRatio(
-                            num_channels=(2 ** i) * features,
+                            num_channels=(2**i) * features,
                             ratio=2 ** (depth - j - 1 - i),
                             use_bias=use_bias,
                             name=f"UpSampleRatio_{K.get_uid('UpSampleRatio')}",
@@ -276,7 +265,7 @@ def MAXIM(
 
                 # Decoder block
                 x = UNetDecoderBlock(
-                    num_channels=(2 ** i) * features,
+                    num_channels=(2**i) * features,
                     num_groups=num_groups,
                     lrelu_slope=lrelu_slope,
                     block_size=block_size,
@@ -298,7 +287,7 @@ def MAXIM(
                 if i < num_supervision_scales:
                     if idx_stage < num_stages - 1:  # not last stage, apply SAM
                         sam, output = SAM(
-                            num_channels=(2 ** i) * features,
+                            num_channels=(2**i) * features,
                             output_channels=num_outputs,
                             use_bias=use_bias,
                             name=f"stage_{idx_stage}_supervised_attention_module_{i}",
