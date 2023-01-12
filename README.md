@@ -5,7 +5,7 @@
 [![Models on TF-Hub](https://img.shields.io/badge/TF--Hub-Models%20on%20TF--Hub-orange)](https://tfhub.dev/sayakpaul/collections/maxim/1)
 [![HugginFace badge](https://img.shields.io/badge/🤗%20Hugging%20Face-Hub-yellow.svg)](https://huggingface.co/models?pipeline_tag=image-to-image&sort=downloads&search=maxim)
 
-Implementation of MAXIM [1] in TensorFlow.
+Implementation of MAXIM [1] in TensorFlow. This project received the [#TFCommunitySpotlight Award](https://twitter.com/TensorFlow/status/1611469033714470919?s=20&t=a5LMpYXrPg6E0WGudsYezw).
 
 MAXIM introduces a backbone that can tackle image denoising, dehazing, deblurring, deraining, and enhancement.
 
