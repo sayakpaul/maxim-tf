@@ -38,17 +38,9 @@ def UpSampleRatio(
     """Upsample features given a ratio > 0."""
 
     def apply(x):
-        n, h, w, c = (
-            K.int_shape(x)[0],
-            K.int_shape(x)[1],
-            K.int_shape(x)[2],
-            K.int_shape(x)[3],
-        )
-
         # Following `jax.image.resize()`
         x = Resizing(
-            height=int(h * ratio),
-            width=int(w * ratio),
+            ratio=1 / ratio,
             method="bilinear",
             antialias=True,
             name=f"{name}_resizing_{K.get_uid('Resizing')}",

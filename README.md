@@ -140,6 +140,12 @@ MAXIM supports arbitrary image resolutions. However, the available TensorFlow mo
 
 But these models can be extended to support arbitrary resolution. Refer to [this notebook](https://colab.research.google.com/github/sayakpaul/maxim-tf/blob/main/notebooks/inference-dynamic-resize.ipynb) for more details. Specifically, for a given task and an image, a new version of the model is instantiated and the weights of the available model are copied into the new model instance. This is a time-consuming process and isn't very efficient. 
 
+#### Changes to achieve arbitrary image resolution on TF
+
+- Substitute einops calls for pure TF operations: Einops operations are not intended operate on data-dependent (unknown) dimensionality [https://github.com/data-apis/array-api/issues/494](https://github.com/data-apis/array-api/issues/494). Thus, it was necessary to re-write BlockImages and UnblockImages as full TF ops. For convenience, we separate BlockImages into TFBlockImages and TFBlockImagesByGrid. We also rewrote UnblockImages as TFUnblockImages. 
+- Make [dim_u](https://github.com/sayakpaul/maxim-tf/pull/24/files#diff-8b281bcfc137b53489e1b19b29735462d5deac19b8c2c2f82cf0383680908063R121) and [dim_v](https://github.com/sayakpaul/maxim-tf/pull/24/files#diff-8b281bcfc137b53489e1b19b29735462d5deac19b8c2c2f82cf0383680908063R130) parameters independent of the input image size. This can be done by computing dim_u and dim_v from the provided grid_size and/or block_size. 
+- Change resizing layers so as to receive a ratio independent of the image size. It was important to use the float ratios to compute the final image size, just then converting back to int, to avoid loss of information.
+ 
 ### Output mismatches
 
 The outputs of the TF and JAX models vary slightly. This is because of the differences in the implementation of different layers (resizing layer mainly). Even though the differences in the outputs of individual blocks of TF and JAX models are small, they add up, in the end, to be larger than one might expect. 

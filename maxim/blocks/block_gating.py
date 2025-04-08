@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
-from ..layers import BlockImages, SwapAxes, UnblockImages
+from ..layers import SwapAxes, TFBlockImages, TFUnblockImages
 
 
 def BlockGatingUnit(use_bias: bool = True, name: str = "block_gating_unit"):
@@ -47,8 +47,7 @@ def BlockGmlpLayer(
             K.int_shape(x)[3],
         )
         fh, fw = block_size
-        gh, gw = h // fh, w // fw
-        x = BlockImages()(x, patch_size=(fh, fw))
+        x, gh, gw = TFBlockImages()(x, patch_size=(fh, fw))
         # MLP2: Local (block) mixing part, provides within-block communication.
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm")(x)
         y = layers.Dense(
@@ -65,7 +64,7 @@ def BlockGmlpLayer(
         )(y)
         y = layers.Dropout(dropout_rate)(y)
         x = x + y
-        x = UnblockImages()(x, grid_size=(gh, gw), patch_size=(fh, fw))
+        x = TFUnblockImages()(x, patch_size=(fh, fw), grid_size=(gh, gw))
         return x
 
     return apply

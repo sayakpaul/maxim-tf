@@ -33,7 +33,6 @@ flags.DEFINE_enum(
     "Task to run.",
 )
 flags.DEFINE_string("ckpt_path", "", "Path to checkpoint.")
-flags.DEFINE_boolean("dynamic_resize", False, "Whether to allow dynamic resizing.")
 flags.DEFINE_string("input_dir", "", "Input dir to the test set.")
 flags.DEFINE_string("output_dir", "", "Output dir to store predicted images.")
 flags.DEFINE_boolean("has_target", True, "Whether has corresponding gt image.")
@@ -201,17 +200,14 @@ def rgb2ycbcr(img, y_only=False):
     if y_only:
         out_img = np.dot(img, [65.481, 128.553, 24.966]) + 16.0
     else:
-        out_img = (
-            np.matmul(
-                img,
-                [
-                    [65.481, -37.797, 112.0],
-                    [128.553, -74.203, -93.786],
-                    [24.966, 112.0, -18.214],
-                ],
-            )
-            + [16, 128, 128]
-        )
+        out_img = np.matmul(
+            img,
+            [
+                [65.481, -37.797, 112.0],
+                [128.553, -74.203, -93.786],
+                [24.966, 112.0, -18.214],
+            ],
+        ) + [16, 128, 128]
     out_img = _convert_output_type_range(out_img, img_type)
     return out_img
 
@@ -304,15 +300,8 @@ def make_shape_even(image):
 
 
 def main(_):
-    print(FLAGS.dynamic_resize)
     if FLAGS.save_images:
         os.makedirs(FLAGS.output_dir, exist_ok=True)
-
-    if FLAGS.dynamic_resize:
-        print(
-            "Dynamic resizing is enabled. This means for each new input, the model"
-            " will be reinitialized and weights will be populated."
-        )
 
     # sorted is important for continuning an inference job.
     filepath = sorted(os.listdir(os.path.join(FLAGS.input_dir, "input")))
@@ -344,54 +333,22 @@ def main(_):
                 np.asarray(Image.open(target_file).convert("RGB"), np.float32) / 255.0
             )
 
-        if FLAGS.dynamic_resize:
-            height, width = input_img.shape[0], input_img.shape[1]
-            # Padding images to have even shapes
-            input_img = make_shape_even(input_img)
-            height_even, width_even = input_img.shape[0], input_img.shape[1]
+        height, width = input_img.shape[0], input_img.shape[1]
+        # Padding images to have even shapes
+        input_img = make_shape_even(input_img)
+        height_even, width_even = input_img.shape[0], input_img.shape[1]
 
-            # padding images to be multiplies of 64
-            input_img = mod_padding_symmetric(input_img, factor=64)
+        # padding images to be multiplies of 64
+        input_img = mod_padding_symmetric(input_img, factor=64)
 
         if FLAGS.geometric_ensemble:
             input_img = augment_image(input_img, FLAGS.ensemble_times)
         else:
             input_img = tf.expand_dims(input_img, axis=0)
 
-        # resize to the bigger side and then take a crop.
-        # (since the model cannot operate on arbitrary input resolutions yet,
-        # there's a hack, see below)
-        if not FLAGS.dynamic_resize:
-            input_img = resize_image(tf.convert_to_tensor(input_img), _IMG_SIZE)
-
-        # To allow the model to operate on arbitrary input shapes, we need to instantiate
-        # the model every time there's a new input with new spatial resolutions.
-        # Once the model is initialized, we just load the weights and obtain predictions.
-        # reference: https://github.com/google-research/maxim/blob/main/maxim/run_eval.py#L45-#L61
-        if FLAGS.dynamic_resize:
-            configs = MAXIM_CONFIGS.get(_MODEL_VARIANT_DICT[FLAGS.task])
-            configs.update(
-                {
-                    "variant": _MODEL_VARIANT_DICT[FLAGS.task],
-                    "dropout_rate": 0.0,
-                    "num_outputs": 3,
-                    "use_bias": True,
-                    "num_supervision_scales": 3,
-                }
-            )
-            configs.update({"input_resolution": (input_img.shape[1], input_img.shape[2])})
-            new_model = Model(**configs)
-            new_model.set_weights(model.get_weights())
-            print(
-                f"New model initialized with with resolution: {(input_img.shape[1], input_img.shape[2])}."
-            )
-
         # handle multi-stage outputs, obtain the last scale output of last stage
-        preds = (
-            new_model.predict(input_img)
-            if FLAGS.dynamic_resize
-            else model.predict(input_img)
-        )
+
+        preds = model.predict(input_img)
         if isinstance(preds, list):
             preds = preds[-1]
             if isinstance(preds, list):
@@ -404,13 +361,12 @@ def main(_):
             preds = np.array(preds[0], np.float32)
 
         # unpad images to get the original resolution
-        if FLAGS.dynamic_resize:
-            new_height, new_width = preds.shape[0], preds.shape[1]
-            h_start = new_height // 2 - height_even // 2
-            h_end = h_start + height
-            w_start = new_width // 2 - width_even // 2
-            w_end = w_start + width
-            preds = preds[h_start:h_end, w_start:w_end, :]
+        new_height, new_width = preds.shape[0], preds.shape[1]
+        h_start = new_height // 2 - height_even // 2
+        h_end = h_start + height
+        w_start = new_width // 2 - width_even // 2
+        w_end = w_start + width
+        preds = preds[h_start:h_end, w_start:w_end, :]
 
         # print PSNR scores
         if FLAGS.has_target:

@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers
 
-from ..layers import BlockImages, SwapAxes, UnblockImages
+from ..layers import SwapAxes, TFBlockImagesByGrid, TFUnblockImages
 
 
 def GridGatingUnit(use_bias: bool = True, name: str = "grid_gating_unit"):
@@ -47,9 +47,8 @@ def GridGmlpLayer(
             K.int_shape(x)[3],
         )
         gh, gw = grid_size
-        fh, fw = h // gh, w // gw
 
-        x = BlockImages()(x, patch_size=(fh, fw))
+        x, ph, pw = TFBlockImagesByGrid()(x, grid_size=(gh, gw))
         # gMLP1: Global (grid) mixing part, provides global grid communication.
         y = layers.LayerNormalization(epsilon=1e-06, name=f"{name}_LayerNorm")(x)
         y = layers.Dense(
@@ -66,7 +65,7 @@ def GridGmlpLayer(
         )(y)
         y = layers.Dropout(dropout_rate)(y)
         x = x + y
-        x = UnblockImages()(x, grid_size=(gh, gw), patch_size=(fh, fw))
+        x = TFUnblockImages()(x, grid_size=(gh, gw), patch_size=(ph, pw))
         return x
 
     return apply
